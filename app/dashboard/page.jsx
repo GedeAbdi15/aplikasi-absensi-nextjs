@@ -43,7 +43,7 @@ const dataTable = [
   },
 ];
 
-const DashboardClient = () => {
+const DashboardPage = () => {
   const [searchText, setSearchText] = useState("");
   const [searchedColumn, setSearchedColumn] = useState("");
   const searchInput = useRef(null);
@@ -246,4 +246,4 @@ const DashboardClient = () => {
   );
 };
 
-export default DashboardClient;
+export default DashboardPage;

@@ -1,13 +1,18 @@
-import LoginView from "./_view/LoginView";
+import { cookies } from "next/headers";
+import LoginPageClient from "./LoginPageClient";
+import { redirect } from "next/navigation";
 
-const LoginPage = () => {
+const LoginPage = async () => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("jwt");
+
+  if (token) {
+    redirect("/dashboard");
+  }
+
   return (
     <>
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="p-6 bg-white shadow rounded-lg">
-          <LoginView />
-        </div>
-      </div>
+      <LoginPageClient />
     </>
   );
 };
