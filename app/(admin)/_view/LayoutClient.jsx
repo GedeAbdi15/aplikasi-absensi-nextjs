@@ -2,21 +2,20 @@
 
 import "../../globals.css";
 import { Avatar, Button, Dropdown, Layout, Menu, Space, theme } from "antd";
-import { getMe, logoutRequest } from "../../api/auth";
 import Sider from "antd/es/layout/Sider";
 import {
   AntDesignOutlined,
-  AppstoreAddOutlined,
-  AuditOutlined,
-  ContainerOutlined,
   DashboardOutlined,
   DatabaseFilled,
   DownOutlined,
+  FileProtectOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  ReconciliationOutlined,
+  ScheduleOutlined,
   SettingOutlined,
+  SolutionOutlined,
+  TeamOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import { Content, Header } from "antd/es/layout/layout";
@@ -24,6 +23,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { logoutRequest } from "@/app/api/auth";
 
 const sidebarMenu = [
   {
@@ -32,29 +32,34 @@ const sidebarMenu = [
     label: <Link href="/dashboard">Dashboard</Link>,
   },
   {
-    key: "/users",
-    icon: <ReconciliationOutlined />,
-    label: <Link href="/users">Tambah User</Link>,
+    key: "/ijin",
+    icon: <FileProtectOutlined />,
+    label: <Link href="/ijin">Data Ijin</Link>,
   },
   {
-    key: "/applicants",
-    icon: <AuditOutlined />,
-    label: <Link href="/applicants">Manage Applicants</Link>,
+    key: "/absen",
+    icon: <SolutionOutlined />,
+    label: <Link href="/absen">Data Absen</Link>,
   },
   {
-    key: "manage-contents",
+    key: "kelola",
     icon: <DatabaseFilled />,
-    label: "Manage Contents",
+    label: "Kelola",
     children: [
       {
-        key: "/banners",
-        icon: <AppstoreAddOutlined />,
-        label: <Link href="/banners">Banners</Link>,
+        key: "/users",
+        icon: <UserOutlined />,
+        label: <Link href="/users">Data Pegawai</Link>,
       },
       {
-        key: "/testimonials",
-        icon: <ContainerOutlined />,
-        label: <Link href="/testimonial">Testimonial</Link>,
+        key: "/divisi",
+        icon: <TeamOutlined />,
+        label: <Link href="/divisi">Data Divisi</Link>,
+      },
+      {
+        key: "/jam-kerja",
+        icon: <ScheduleOutlined />,
+        label: <Link href="/jam-kerja">Data Jam Kerja</Link>,
       },
     ],
   },
