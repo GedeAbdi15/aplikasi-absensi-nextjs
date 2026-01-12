@@ -9,6 +9,7 @@ import {
   DatabaseFilled,
   DownOutlined,
   FileProtectOutlined,
+  HomeOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -19,7 +20,7 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { Content, Header } from "antd/es/layout/layout";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -27,39 +28,52 @@ import { logoutRequest } from "@/app/api/auth";
 
 const sidebarMenu = [
   {
+    key: "/beranda",
+    icon: <HomeOutlined />,
+    label: <Link href="/beranda">Beranda</Link>,
+    roles: ["admin", "pegawai"],
+  },
+  {
     key: "/dashboard",
     icon: <DashboardOutlined />,
     label: <Link href="/dashboard">Dashboard</Link>,
+    roles: ["admin"],
   },
   {
     key: "/ijin",
     icon: <FileProtectOutlined />,
     label: <Link href="/ijin">Data Ijin</Link>,
+    roles: ["admin", "pegawai"],
   },
   {
     key: "/absen",
     icon: <SolutionOutlined />,
     label: <Link href="/absen">Data Absen</Link>,
+    roles: ["admin", "pegawai"],
   },
   {
     key: "kelola",
     icon: <DatabaseFilled />,
     label: "Kelola",
+    roles: ["admin"],
     children: [
       {
-        key: "/users",
+        key: "/pegawai",
         icon: <UserOutlined />,
-        label: <Link href="/users">Data Pegawai</Link>,
+        label: <Link href="/pegawai">Data Pegawai</Link>,
+        roles: ["admin"],
       },
       {
         key: "/divisi",
         icon: <TeamOutlined />,
         label: <Link href="/divisi">Data Divisi</Link>,
+        roles: ["admin"],
       },
       {
         key: "/jam-kerja",
         icon: <ScheduleOutlined />,
         label: <Link href="/jam-kerja">Data Jam Kerja</Link>,
+        roles: ["admin"],
       },
     ],
   },
@@ -68,24 +82,16 @@ const sidebarMenu = [
 const dropdownItems = [
   {
     key: "user_setting",
-    label: "User Setting",
+    label: "Pengaturan Akun",
     disabled: true,
   },
   {
     type: "divider",
   },
   {
-    key: "profile",
-    label: "Profile",
-    icon: <UserOutlined />,
-  },
-  {
     key: "setings",
-    label: "Settings",
+    label: "Pengaturan",
     icon: <SettingOutlined />,
-  },
-  {
-    type: "divider",
   },
   {
     key: "logout",
@@ -116,6 +122,24 @@ const objectStyles = {
   },
 };
 
+const filterMenuByRole = (menus, role) => {
+  return menus
+    .filter((menu) => menu.roles?.includes(role))
+    .map((menu) => {
+      if (menu.children) {
+        const filteredChildren = filterMenuByRole(menu.children, role);
+        if (filteredChildren.length === 0) return null;
+
+        return {
+          ...menu,
+          children: filteredChildren,
+        };
+      }
+      return menu;
+    })
+    .filter(Boolean);
+};
+
 const MainLayoutClient = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
   const pathName = usePathname();
@@ -123,6 +147,19 @@ const MainLayoutClient = ({ children }) => {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
   const router = useRouter();
+  const [role, setRole] = useState(null);
+  const [namaLengkap, setNamaLengkap] = useState("");
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) {
+          setRole(res.data.role);
+          setNamaLengkap(res.data.nama_lengkap);
+        }
+      });
+  }, []);
 
   const handleLogout = async ({ key }) => {
     if (key === "logout") {
@@ -156,21 +193,20 @@ const MainLayoutClient = ({ children }) => {
         width={275}
       >
         <div className="grid grid-flow-col justify-items-center p-4">
-          <Image
-            src="/next.svg"
-            alt="logo"
-            className="dark:invert "
-            width={100}
-            height={20}
-            priority
-          />
+          <Image src="/logo.png" alt="logo" width={100} height={20} priority />
         </div>
-        <div className="demo-logo-vertical" />
         <Menu
           theme="dark"
           mode="inline"
           selectedKeys={[pathName]}
-          items={sidebarMenu.map((item) => ({ ...item, label: item.label }))}
+          items={
+            role
+              ? filterMenuByRole(sidebarMenu, role).map((item) => ({
+                  ...item,
+                  label: item.label,
+                }))
+              : []
+          }
           style={{
             paddingLeft: "16px",
             paddingRight: "16px",
@@ -219,7 +255,7 @@ const MainLayoutClient = ({ children }) => {
             >
               <a onClick={(e) => e.preventDefault()}>
                 <Space>
-                  Menu
+                  {namaLengkap}
                   <DownOutlined />
                 </Space>
               </a>

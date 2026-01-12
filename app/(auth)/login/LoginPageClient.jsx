@@ -6,7 +6,7 @@ import {
   LockOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { Alert, Button, Checkbox, Flex, Form, Input } from "antd";
+import { Alert, Button, Checkbox, Form, Input } from "antd";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -24,7 +24,7 @@ const LoginPageClient = () => {
   }, []);
 
   if (!now) {
-    return null; // ⬅️ hindari SSR mismatch
+    return null; // hindari SSR mismatch
   }
 
   const onFinish = async (values) => {
@@ -34,7 +34,7 @@ const LoginPageClient = () => {
     try {
       setError(null);
       await loginRequest(nip, password, remember);
-      router.replace("/dashboard");
+      router.replace("/beranda");
       router.refresh();
     } catch (err) {
       setError(err.message);

@@ -1,16 +1,34 @@
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
-    const cookie = req.headers.get("cookie") ?? "";
+    try {
+        const backendRes = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/auth/me`,
+            {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Cookie: req.headers.get("cookie") || "",
+                },
+                credentials: "include",
+            }
+        );
 
-    const backendRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/me`,
-        {
-            headers: { cookie },
-            credentials: "include",
-        }
-    );
+        const data = await backendRes.json();
 
-    const data = await backendRes.json();
-    return NextResponse.json(data);
+        console.log("Response from /me:", data);
+
+        return NextResponse.json(data, {
+            status: backendRes.status,
+        });
+    } catch (error) {
+        console.error("Error fetching /me:", error);
+        return NextResponse.json(
+            {
+                success: false,
+                message: "Gagal mengambil data user",
+            },
+            { status: 500 }
+        );
+    }
 }

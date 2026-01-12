@@ -14,7 +14,7 @@ import {
 import React, { useEffect, useState } from "react";
 import dayjs from "dayjs";
 
-const UserPageClient = () => {
+const PegawaiClient = () => {
   const [isEdit, setIsEdit] = useState(false);
   const [dataSource, setDataSource] = useState([]);
   const [divisiOptions, setDivisiOptions] = useState([]);
@@ -269,4 +269,4 @@ const UserPageClient = () => {
   );
 };
 
-export default UserPageClient;
+export default PegawaiClient;

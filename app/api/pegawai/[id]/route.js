@@ -2,10 +2,11 @@
 import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
-    const { nip } = params;
+    // ini ambil nip, nama param tetap id sesuai nama folder
+    const { id } = params;
 
     const backendRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/pegawai/${nip}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/pegawai/${id}`,
         {
             method: "GET",
             headers: {
