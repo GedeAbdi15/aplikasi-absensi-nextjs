@@ -9,21 +9,25 @@ import {
   message,
   Modal,
   Select,
-  TimePicker,
+  DatePicker,
 } from "antd";
 import { useEffect, useState } from "react";
+
+const { RangePicker } = DatePicker;
 
 const BerandaClient = () => {
   const [role, setRole] = useState(null);
   const [pegawai, setPegawai] = useState(null);
   const [jam, setJam] = useState(null);
+  const [izin, setIzin] = useState(null);
   const [loading, setLoading] = useState(true);
   const [btnLoading, setBtnLoading] = useState(false);
   const [JamKerjaOption, setJamKerjaOption] = useState([]);
   const [form] = Form.useForm();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalAbsenOpen, setIsModalAbsenOpen] = useState(false);
+  const [isModalIzinOpen, setIsModalIzinOpen] = useState(false);
 
-  const fetchDivisi = async () => {
+  const fetchDataJamKerja = async () => {
     const res = await fetch("/api/jam-kerja");
     const data = await res.json();
 
@@ -66,7 +70,7 @@ const BerandaClient = () => {
     };
 
     const loadDataJam = async () => {
-      await fetchDivisi();
+      await fetchDataJamKerja();
     };
 
     fetchData();
@@ -106,10 +110,44 @@ const BerandaClient = () => {
 
       console.log("Absen masuk sukses:", json);
       message.success("Absen masuk berhasil");
-      setIsModalOpen(false);
+      setIsModalAbsenOpen(false);
       form.resetFields();
     } catch (err) {
       console.error(err.message);
+    } finally {
+      setBtnLoading(false);
+    }
+  };
+
+  const handleIzin = async (values) => {
+    setBtnLoading(true);
+
+    try {
+      const [tglMulai, tglSelesai] = values.tgl_izin;
+
+      const payload = {
+        tgl_mulai: tglMulai.toISOString(),
+        tgl_selesai: tglSelesai.toISOString(),
+        alasan: values.alasan,
+      };
+
+      console.log("Payload izin:", payload);
+
+      const res = await fetch("/api/izin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || "Gagal input izin");
+
+      message.success("Izin berhasil");
+      setIsModalIzinOpen(false);
+      form.resetFields();
+    } catch (err) {
+      console.error(err);
+      message.error(err.message);
     } finally {
       setBtnLoading(false);
     }
@@ -144,16 +182,22 @@ const BerandaClient = () => {
   const showModalAdd = (record) => {
     setJam(record);
     form.resetFields();
-    setIsModalOpen(true);
+    setIsModalAbsenOpen(true);
+  };
+
+  const showModalIzin = (record) => {
+    setIzin(record);
+    form.resetFields();
+    setIsModalIzinOpen(true);
   };
 
   return (
     <>
       <Modal
         title={"Pilih Jam Kerja"}
-        open={isModalOpen}
+        open={isModalAbsenOpen}
         onOk={() => form.submit()}
-        onCancel={() => setIsModalOpen(false)}
+        onCancel={() => setIsModalAbsenOpen(false)}
         centered
       >
         <Form form={form} layout="vertical" onFinish={handleAbsenMasuk}>
@@ -163,6 +207,31 @@ const BerandaClient = () => {
             rules={[{ required: true, message: "Jam kerja wajib dipilih" }]}
           >
             <Select options={JamKerjaOption} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={"Input Izin"}
+        open={isModalIzinOpen}
+        onOk={() => form.submit()}
+        onCancel={() => setIsModalIzinOpen(false)}
+        centered
+      >
+        <Form form={form} layout="vertical" onFinish={handleIzin}>
+          <Form.Item
+            name="alasan"
+            label="Alasan"
+            rules={[{ required: true, message: "Alasan wajib diisi" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="tgl_izin"
+            label="Tanggal Izin"
+            rules={[{ required: true, message: "Tanggal izin wajib diisi" }]}
+          >
+            <RangePicker />
           </Form.Item>
         </Form>
       </Modal>
@@ -187,6 +256,16 @@ const BerandaClient = () => {
             onClick={handleAbsenPulang}
           >
             Absen Pulang
+          </Button>
+
+          <Button
+            loading={btnLoading}
+            disabled={role !== "pegawai"}
+            type="primary"
+            style={{ marginBottom: 16 }}
+            onClick={showModalIzin}
+          >
+            Input Izin
           </Button>
         </Flex>
 

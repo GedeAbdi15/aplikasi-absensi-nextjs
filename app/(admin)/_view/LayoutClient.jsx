@@ -40,9 +40,9 @@ const sidebarMenu = [
     roles: ["admin"],
   },
   {
-    key: "/ijin",
+    key: "/izin",
     icon: <FileProtectOutlined />,
-    label: <Link href="/ijin">Data Ijin</Link>,
+    label: <Link href="/izin">Data Izin</Link>,
     roles: ["admin", "pegawai"],
   },
   {

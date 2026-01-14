@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(req) {
     const backendRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/absensi`, {
         method: "GET",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            Cookie: req.headers.get("cookie") || "",   // <-- WAJIB
         },
         credentials: "include",
     });
