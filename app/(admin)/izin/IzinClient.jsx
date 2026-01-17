@@ -1,86 +1,171 @@
 "use client";
 
-import { Flex, Space, Table, Tag } from "antd";
-
-const columns = [
-  {
-    title: "Name",
-    dataIndex: "name",
-    key: "name",
-    render: (text) => <a>{text}</a>,
-  },
-  {
-    title: "Age",
-    dataIndex: "age",
-    key: "age",
-  },
-  {
-    title: "Address",
-    dataIndex: "address",
-    key: "address",
-  },
-  {
-    title: "Tags",
-    key: "tags",
-    dataIndex: "tags",
-    render: (_, { tags }) => (
-      <Flex gap="small" align="center" wrap>
-        {tags.map((tag) => {
-          let color = tag.length > 5 ? "geekblue" : "green";
-          if (tag === "loser") {
-            color = "volcano";
-          }
-          return (
-            <Tag color={color} key={tag}>
-              {tag.toUpperCase()}
-            </Tag>
-          );
-        })}
-      </Flex>
-    ),
-  },
-  {
-    title: "Action",
-    key: "action",
-    render: (_, record) => (
-      <Space size="middle">
-        <a>Invite {record.name}</a>
-        <a>Delete</a>
-      </Space>
-    ),
-  },
-];
-const data = [
-  {
-    key: "1",
-    name: "John Brown",
-    age: 32,
-    address: "New York No. 1 Lake Park",
-    tags: ["nice", "developer"],
-  },
-  {
-    key: "2",
-    name: "Jim Green",
-    age: 42,
-    address: "London No. 1 Lake Park",
-    tags: ["loser"],
-  },
-  {
-    key: "3",
-    name: "Joe Black",
-    age: 32,
-    address: "Sydney No. 1 Lake Park",
-    tags: ["cool", "teacher"],
-  },
-];
+import { message, Space, Table } from "antd";
+import { useEffect, useState } from "react";
+import dayjs from "dayjs";
 
 const IzinClient = () => {
+  const [tableData, setTableData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState(null);
+  const [pegawai, setPegawai] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchData = async () => {
+      try {
+        // 1. ambil user login
+        const meRes = await fetch("/api/auth/me");
+        const meJson = await meRes.json();
+
+        if (!meJson.success || !isMounted) return;
+
+        setRole(meJson.data.role);
+
+        // 2. ambil data pegawai berdasarkan nip
+        const pegawaiRes = await fetch(`/api/pegawai/${meJson.data.nip}`);
+        const pegawaiJson = await pegawaiRes.json();
+
+        console.log("PEGAWAI JSON:", pegawaiJson);
+
+        if (pegawaiJson.success && isMounted) {
+          setPegawai(pegawaiJson.data);
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!role) return;
+    if (role !== "admin" && !pegawai) return;
+
+    const fetchDataAbsensi = async () => {
+      setLoading(true);
+      try {
+        let res;
+
+        if (role === "admin") {
+          res = await fetch("/api/izin");
+        } else {
+          res = await fetch(`/api/izin/pegawai/${pegawai?.id_pegawai}`);
+        }
+
+        const json = await res.json();
+        setTableData(json.data || []);
+      } catch (err) {
+        message.error("Error : " + err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDataAbsensi();
+  }, [role, pegawai]);
+
+  const handleSetStatus = async (id, newStatus) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/izin/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status_izin: newStatus }),
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        const updated = json?.data;
+
+        if (!updated?.id_izin) {
+          message.error("Response update tidak valid");
+          return;
+        }
+
+        message.success("Status izin berhasil diperbarui");
+        setTableData((prev) =>
+          prev.map((item) =>
+            item?.id_izin === updated.id_izin ? updated : item
+          )
+        );
+      } else {
+        message.error(json?.message || "Failed to update status");
+      }
+    } catch (err) {
+      message.error("Error: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const columns = [
+    {
+      title: "Nama Pegawai",
+      dataIndex: ["pegawai", "nama_lengkap"],
+      key: "nama_lengkap",
+    },
+    {
+      title: "Tanggal Mulai",
+      dataIndex: "tgl_mulai",
+      key: "tgl_mulai",
+      render: (val) => (val ? dayjs(val).format("YYYY-MM-DD") : "-"),
+    },
+    {
+      title: "Tanggal Selesai",
+      dataIndex: "tgl_selesai",
+      key: "tgl_selesai",
+      render: (val) => (val ? dayjs(val).format("YYYY-MM-DD") : "-"),
+    },
+    {
+      title: "Alasan",
+      key: "alasan",
+      dataIndex: "alasan",
+    },
+    {
+      title: "Status Izin",
+      key: "status_izin",
+      dataIndex: "status_izin",
+    },
+    ...(role === "admin"
+      ? [
+          {
+            title: "Action",
+            key: "action",
+            render: (_, record) => (
+              <Space size="middle">
+                <a onClick={() => handleSetStatus(record.id_izin, "disetujui")}>
+                  Setujui
+                </a>
+                <a onClick={() => handleSetStatus(record.id_izin, "ditolak")}>
+                  Tolak
+                </a>
+              </Space>
+            ),
+          },
+        ]
+      : []),
+  ];
+
   return (
     <>
-      <div className="">
-        <h1>Data Izin</h1>
-      </div>
-      <Table columns={columns} dataSource={data} />
+      <h1 className="mb-5">Data Izin</h1>
+
+      <Table
+        columns={columns}
+        rowKey={(row) => row.id_izin}
+        loading={loading}
+        dataSource={tableData}
+      />
     </>
   );
 };

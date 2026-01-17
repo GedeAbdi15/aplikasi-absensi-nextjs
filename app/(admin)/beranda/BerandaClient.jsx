@@ -237,37 +237,36 @@ const BerandaClient = () => {
       </Modal>
 
       <div className="">
-        <Flex justify="center" align="center" direction="row" gap="middle">
-          <Button
-            loading={btnLoading}
-            disabled={role !== "pegawai"}
-            type="primary"
-            style={{ marginBottom: 16 }}
-            onClick={showModalAdd}
-          >
-            Absen Masuk
-          </Button>
+        {role === "pegawai" && (
+          <Flex justify="center" align="center" direction="row" gap="middle">
+            <Button
+              loading={btnLoading}
+              type="primary"
+              style={{ marginBottom: 16 }}
+              onClick={showModalAdd}
+            >
+              Absen Masuk
+            </Button>
 
-          <Button
-            loading={btnLoading}
-            disabled={role !== "pegawai"}
-            type="primary"
-            style={{ marginBottom: 16 }}
-            onClick={handleAbsenPulang}
-          >
-            Absen Pulang
-          </Button>
+            <Button
+              loading={btnLoading}
+              type="primary"
+              style={{ marginBottom: 16 }}
+              onClick={handleAbsenPulang}
+            >
+              Absen Pulang
+            </Button>
 
-          <Button
-            loading={btnLoading}
-            disabled={role !== "pegawai"}
-            type="primary"
-            style={{ marginBottom: 16 }}
-            onClick={showModalIzin}
-          >
-            Input Izin
-          </Button>
-        </Flex>
+            <Button
+              loading={btnLoading}
+              type="primary"
+              style={{ marginBottom: 16 }}
+              onClick={showModalIzin}
+            >
+              Input Izin
+            </Button>
+          </Flex>
+        )}
 
         <Card
           title="Informasi Pengguna"

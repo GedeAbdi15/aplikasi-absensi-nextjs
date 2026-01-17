@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
     // ini ambil nip, nama param tetap id sesuai nama folder
-    const { id } = params;
+    const { id } = await params;
 
     const backendRes = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/pegawai/${id}`,
@@ -20,7 +20,7 @@ export async function GET(req, { params }) {
 }
 
 export async function PUT(req, { params }) {
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
 
     const backendRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pegawai/${id}`, {

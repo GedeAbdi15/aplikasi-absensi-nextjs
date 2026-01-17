@@ -1,35 +1,11 @@
 "use client";
 
-import { Flex, message, Space, Table, Tag } from "antd";
+import { message, Table } from "antd";
+import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-
-const data = [
-  {
-    key: "1",
-    name: "John Brown",
-    age: 32,
-    address: "New York No. 1 Lake Park",
-    tags: ["nice", "developer"],
-  },
-  {
-    key: "2",
-    name: "Jim Green",
-    age: 42,
-    address: "London No. 1 Lake Park",
-    tags: ["loser"],
-  },
-  {
-    key: "3",
-    name: "Joe Black",
-    age: 32,
-    address: "Sydney No. 1 Lake Park",
-    tags: ["cool", "teacher"],
-  },
-];
 
 const AbsenClient = () => {
   const [tableData, setTableData] = useState([]);
-  const [selectedId, setSelectedId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState(null);
   const [pegawai, setPegawai] = useState(null);
@@ -105,6 +81,7 @@ const AbsenClient = () => {
       title: "Tanggal Absensi",
       dataIndex: "tgl_absensi",
       key: "tgl_absensi",
+      render: (val) => (val ? dayjs(val).format("YYYY-MM-DD") : "-"),
     },
     {
       title: "Jam Masuk",

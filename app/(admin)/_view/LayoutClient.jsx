@@ -89,8 +89,8 @@ const dropdownItems = [
     type: "divider",
   },
   {
-    key: "setings",
-    label: "Pengaturan",
+    key: "/pengaturan-profil",
+    label: <Link href="/pengaturan-profil">Pengaturan</Link>,
     icon: <SettingOutlined />,
   },
   {
