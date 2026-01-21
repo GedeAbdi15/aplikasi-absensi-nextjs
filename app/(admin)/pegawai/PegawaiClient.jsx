@@ -13,6 +13,7 @@ import {
 } from "antd";
 import React, { useEffect, useState } from "react";
 import dayjs from "dayjs";
+import { SearchOutlined } from "@ant-design/icons";
 
 const PegawaiClient = () => {
   const [isEdit, setIsEdit] = useState(false);
@@ -22,6 +23,66 @@ const PegawaiClient = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const [searchText, setSearchText] = useState("");
+  const [searchedColumn, setSearchedColumn] = useState("");
+
+  const getColumnSearchProps = (dataIndex) => ({
+    filterDropdown: ({
+      setSelectedKeys,
+      selectedKeys,
+      confirm,
+      clearFilters,
+    }) => (
+      <div style={{ padding: 8 }}>
+        <Input
+          placeholder={`Cari ${dataIndex}`}
+          value={selectedKeys[0]}
+          onChange={(e) =>
+            setSelectedKeys(e.target.value ? [e.target.value] : [])
+          }
+          onPressEnter={() => {
+            confirm();
+            setSearchText(selectedKeys[0]);
+            setSearchedColumn(dataIndex);
+          }}
+          style={{ marginBottom: 8, display: "block" }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => {
+              confirm();
+              setSearchText(selectedKeys[0]);
+              setSearchedColumn(dataIndex);
+            }}
+            icon={<SearchOutlined />}
+            size="small"
+          >
+            Cari
+          </Button>
+          <Button
+            onClick={() => {
+              clearFilters();
+              setSearchText("");
+            }}
+            size="small"
+          >
+            Reset
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => (
+      <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
+    ),
+    onFilter: (value, record) =>
+      record[dataIndex]
+        ? record[dataIndex]
+            .toString()
+            .toLowerCase()
+            .includes(value.toLowerCase())
+        : false,
+  });
 
   const fetchPegawai = async () => {
     setLoading(true);
@@ -41,7 +102,7 @@ const PegawaiClient = () => {
           key: item.id_pegawai,
           ...item,
           nama_divisi: item.divisi?.nama_divisi || "",
-        })) || []
+        })) || [],
       );
     } catch (err) {
       console.error(err);
@@ -64,7 +125,7 @@ const PegawaiClient = () => {
       data.data.map((d) => ({
         label: d.nama_divisi,
         value: d.id_divisi,
-      }))
+      })),
     );
   };
 
@@ -137,7 +198,7 @@ const PegawaiClient = () => {
       }
 
       message.success(
-        isEdit ? "Berhasil mengedit pegawai" : "Berhasil menambahkan pegawai"
+        isEdit ? "Berhasil mengedit pegawai" : "Berhasil menambahkan pegawai",
       );
 
       setIsModalOpen(false);
@@ -175,7 +236,11 @@ const PegawaiClient = () => {
 
   const columns = [
     { title: "NIP", dataIndex: "nip" },
-    { title: "Nama Lengkap", dataIndex: "nama_lengkap" },
+    {
+      title: "Nama Lengkap",
+      dataIndex: "nama_lengkap",
+      ...getColumnSearchProps("nama_lengkap"),
+    },
     { title: "Jenis Kelamin", dataIndex: "jenis_kelamin" },
     {
       title: "Tanggal Lahir",
@@ -183,7 +248,11 @@ const PegawaiClient = () => {
       render: (val) => (val ? dayjs(val).format("YYYY-MM-DD") : "-"),
     },
     { title: "Jabatan", dataIndex: "jabatan" },
-    { title: "Divisi", dataIndex: "nama_divisi" },
+    {
+      title: "Divisi",
+      dataIndex: "nama_divisi",
+      ...getColumnSearchProps("nama_divisi"),
+    },
     {
       title: "Aksi",
       key: "action",

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
-    const { id } = params;
+    const { id } = await params;
 
     const backendRes = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/absensi/pegawai/${id}`,

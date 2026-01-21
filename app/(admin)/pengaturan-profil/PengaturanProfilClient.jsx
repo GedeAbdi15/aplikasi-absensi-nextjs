@@ -1,16 +1,16 @@
 "use client";
 
-import { LoadingOutlined, PlusOutlined, UserOutlined } from "@ant-design/icons";
+import { PlusOutlined } from "@ant-design/icons";
 import {
-  Avatar,
   Button,
   Card,
+  Descriptions,
   Flex,
   Form,
   Image,
   Input,
   message,
-  Typography,
+  Skeleton,
   Upload,
 } from "antd";
 import { useEffect, useState } from "react";
@@ -37,7 +37,7 @@ const beforeUpload = (file) => {
   if (!isLt2M) {
     message.error("Image must smaller than 2MB!");
   }
-  return isJpgOrPng && isLt2M;
+  return false;
 };
 
 const PengaturanProfilClient = () => {
@@ -45,7 +45,6 @@ const PengaturanProfilClient = () => {
   const [pegawai, setPegawai] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingAvatar, setLoadingAvatar] = useState(false);
-  const [imageUrl, setImageUrl] = useState();
   const [fileList, setFileList] = useState([]);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
@@ -83,20 +82,6 @@ const PengaturanProfilClient = () => {
     };
   }, []);
 
-  //   const handleChange = (info) => {
-  //     if (info.file.status === "uploading") {
-  //       setLoadingAvatar(true);
-  //       return;
-  //     }
-
-  //     if (info.file.originFileObj) {
-  //       getBase64(info.file.originFileObj, (url) => {
-  //         setLoadingAvatar(false);
-  //         setImageUrl(url);
-  //       });
-  //     }
-  //   };
-
   const handlePreview = async (file) => {
     if (!file.url && !file.preview) {
       file.preview = await getBase64(file.originFileObj);
@@ -105,41 +90,127 @@ const PengaturanProfilClient = () => {
     setPreviewOpen(true);
   };
 
-  const handleChange = ({ fileList: newFileList }) => {
+  const handleChange = async ({ fileList: newFileList }) => {
     setFileList(newFileList);
+
+    if (newFileList.length === 0) return;
+
+    const file = newFileList[0]?.originFileObj;
+    if (!file) return;
+
+    await uploadFotoProfil(file);
   };
 
-  const onFinish = (values) => {
-    console.log("Success:", values);
-    message.success("Password berhasil diubah");
+  const onFinish = async (values) => {
+    const payload = {
+      newPassword: values.password,
+    };
+
+    console.log("SUBMIT PAYLOAD: ", payload);
+
+    try {
+      const res = await fetch(`/api/pegawai/update/password`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      console.log("SUBMIT RES:", data);
+
+      if (data.success === false) {
+        message.error(data.error?.message || "Gagal menyimpan data");
+        return;
+      }
+
+      message.success("Berhasil mengedit password");
+    } catch (err) {
+      console.error(err);
+      message.error("Terjadi kesalahan server");
+    }
   };
 
-  const onFinishFailed = (errorInfo) => {
-    console.log("Failed:", errorInfo);
-    message.error("Gagal mengubah password");
+  const items = [
+    {
+      label: "Nama Pegawai",
+      children: pegawai?.nama_lengkap || "-",
+    },
+    {
+      label: "NIP",
+      children: pegawai?.nip || "-",
+    },
+    {
+      label: "Jenis Kelamin",
+      children: pegawai?.jenis_kelamin || "-",
+    },
+    {
+      label: "Jabatan",
+      children: pegawai?.jabatan || "-",
+    },
+    {
+      label: "Divisi",
+      children: pegawai?.divisi?.nama_divisi || "-",
+    },
+    {
+      label: "No Telepon",
+      children: pegawai?.no_telepon || "-",
+    },
+  ];
+
+  const uploadFotoProfil = async (file) => {
+    try {
+      setLoadingAvatar(true);
+
+      const formData = new FormData();
+      formData.append("photo", file);
+
+      const res = await fetch("/api/pegawai/update/foto", {
+        method: "PATCH",
+        body: formData,
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Upload gagal");
+      }
+
+      message.success("Foto profil berhasil diperbarui");
+
+      // Optional: refresh data pegawai
+      setPegawai((prev) => ({
+        ...prev,
+        foto_profil: data.data?.foto_profil,
+      }));
+    } catch (err) {
+      console.error(err);
+      message.error("Gagal upload foto profil");
+    } finally {
+      setLoadingAvatar(false);
+    }
   };
 
   return (
     <>
       <>
-        <Typography.Title level={4}>Pengaturan Profil</Typography.Title>
-
-        <Flex gap={24} align="flex-start" wrap="wrap">
+        <Flex gap={30} justify="center" align="flex-start" wrap="wrap">
           {/* KIRI */}
           <Card
-            title="Informasi Pengguna"
-            style={{ width: 320 }}
+            title="Pengaturan Profil"
+            style={{ minWidth: 700 }}
             loading={loading}
           >
             <Flex vertical align="center" gap={16}>
               <ImgCrop rotationSlider>
                 <Upload
-                  name="avatar"
+                  name="photo"
                   listType="picture-circle"
                   fileList={fileList}
                   onPreview={handlePreview}
                   onChange={handleChange}
                   beforeUpload={beforeUpload}
+                  style={{ minWidth: "180px", minHeight: "180px" }}
                   maxCount={1}
                 >
                   {fileList.length >= 1 ? null : (
@@ -157,7 +228,11 @@ const PengaturanProfilClient = () => {
               {/* IMAGE PREVIEW MODAL */}
               {previewImage && (
                 <Image
-                  styles={{ root: { display: "none" } }}
+                  styles={{
+                    root: { display: "none" },
+                    minWidth: "180px",
+                    minHeight: "180px",
+                  }}
                   preview={{
                     open: previewOpen,
                     onOpenChange: (open) => setPreviewOpen(open),
@@ -168,44 +243,26 @@ const PengaturanProfilClient = () => {
                 />
               )}
 
-              <div style={{ width: "100%" }}>
-                <p>
-                  <b>Nama Pegawai</b> : {pegawai?.nama_lengkap}
-                </p>
-                <p>
-                  <b>NIP</b> : {pegawai?.nip}
-                </p>
-                <p>
-                  <b>Jenis Kelamin</b> : {pegawai?.jenis_kelamin}
-                </p>
-                <p>
-                  <b>Jabatan</b> : {pegawai?.jabatan}
-                </p>
-                <p>
-                  <b>Divisi</b> : {pegawai?.divisi?.nama_divisi}
-                </p>
-                <p>
-                  <b>No Telepon</b> : {pegawai?.no_telepon}
-                </p>
-              </div>
+              <Skeleton loading={loading} active paragraph={false}>
+                <Descriptions
+                  title="Informasi Pengguna"
+                  bordered
+                  column={1}
+                  size="small"
+                  items={items}
+                  style={{ width: "100%" }}
+                />
+              </Skeleton>
             </Flex>
           </Card>
 
           {/* KANAN */}
           <Card title="Ubah Password" style={{ width: 360 }}>
-            <Form
-              form={form}
-              layout="vertical"
-              onFinish={onFinish}
-              onFinishFailed={onFinishFailed}
-            >
+            <Form form={form} layout="vertical" onFinish={onFinish}>
               <Form.Item
                 label="Password Baru"
                 name="password"
-                rules={[
-                  { required: true, message: "Password wajib diisi" },
-                  { min: 6, message: "Password minimal 6 karakter" },
-                ]}
+                rules={[{ min: 6, message: "Password minimal 6 karakter" }]}
               >
                 <Input.Password />
               </Form.Item>

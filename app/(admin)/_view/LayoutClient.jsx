@@ -26,6 +26,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { logoutRequest } from "@/app/api/auth";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 const sidebarMenu = [
   {
     key: "/beranda",
@@ -149,6 +151,7 @@ const MainLayoutClient = ({ children }) => {
   const router = useRouter();
   const [role, setRole] = useState(null);
   const [namaLengkap, setNamaLengkap] = useState("");
+  const [urlFoto, setUrlFoto] = useState(null);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -157,6 +160,7 @@ const MainLayoutClient = ({ children }) => {
         if (res.success) {
           setRole(res.data.role);
           setNamaLengkap(res.data.nama_lengkap);
+          setUrlFoto(`${API_BASE_URL}/storage/uploads/users/profile/${res.data.foto_profil}`);
         }
       });
   }, []);
@@ -245,7 +249,7 @@ const MainLayoutClient = ({ children }) => {
               gap: 12,
             }}
           >
-            <Avatar size="small" icon={<AntDesignOutlined />} />
+            <Avatar size="small" src={urlFoto} />
 
             <Dropdown
               menu={{ items: dropdownItems, onClick: handleLogout }}

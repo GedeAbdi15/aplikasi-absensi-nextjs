@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Form, Input, Modal, Space, Table, message } from "antd";
+import { Button, Flex, Form, Input, Modal, Space, Table, message } from "antd";
 import React, { useEffect, useState } from "react";
 
 const DivisiPageClient = () => {
@@ -73,7 +73,7 @@ const DivisiPageClient = () => {
       }
 
       message.success(
-        isEdit ? "Berhasil mengedit divisi!" : "Berhasil menambah divisi!"
+        isEdit ? "Berhasil mengedit divisi!" : "Berhasil menambah divisi!",
       );
 
       setIsModalOpen(false);
@@ -142,17 +142,19 @@ const DivisiPageClient = () => {
         </Form>
       </Modal>
 
-      <div className="mb-4">
-        <h1>Data Divisi</h1>
-      </div>
+      <Flex justify="space-between" align="center">
+        <div className="mb-4">
+          <h1>Data Divisi</h1>
+        </div>
 
-      <Button
-        type="primary"
-        onClick={showModalAdd}
-        style={{ marginBottom: 16 }}
-      >
-        Tambah Divisi
-      </Button>
+        <Button
+          type="primary"
+          onClick={showModalAdd}
+          style={{ marginBottom: 16 }}
+        >
+          Tambah Divisi
+        </Button>
+      </Flex>
 
       <Table
         columns={columns}

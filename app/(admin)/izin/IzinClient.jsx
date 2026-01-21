@@ -95,8 +95,8 @@ const IzinClient = () => {
         message.success("Status izin berhasil diperbarui");
         setTableData((prev) =>
           prev.map((item) =>
-            item?.id_izin === updated.id_izin ? updated : item
-          )
+            item?.id_izin === updated.id_izin ? updated : item,
+          ),
         );
       } else {
         message.error(json?.message || "Failed to update status");
@@ -136,6 +136,27 @@ const IzinClient = () => {
       key: "status_izin",
       dataIndex: "status_izin",
     },
+    ...(role === "admin"
+      ? [
+          {
+            title: "Dokument Bukti Izin",
+            key: "filepath",
+            render: (_, record) => {
+              if (!record.filepath) return "-";
+
+              const fileUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}${record.filepath}`;
+
+              return (
+                <Space size="middle">
+                  <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+                    Lihat Dokumen
+                  </a>
+                </Space>
+              );
+            },
+          },
+        ]
+      : []),
     ...(role === "admin"
       ? [
           {

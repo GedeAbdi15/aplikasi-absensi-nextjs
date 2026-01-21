@@ -10,16 +10,31 @@ import {
   Modal,
   Select,
   DatePicker,
+  Descriptions,
+  Skeleton,
+  Upload,
 } from "antd";
 import { useEffect, useState } from "react";
+import dayjs from "dayjs";
+import { UploadOutlined } from "@ant-design/icons";
 
 const { RangePicker } = DatePicker;
+
+const normFile = (e) => {
+  console.log("Upload event:", e);
+  if (Array.isArray(e)) {
+    return e;
+  }
+  return e?.fileList;
+};
 
 const BerandaClient = () => {
   const [role, setRole] = useState(null);
   const [pegawai, setPegawai] = useState(null);
+  const [absen, setAbsen] = useState(null);
   const [jam, setJam] = useState(null);
   const [izin, setIzin] = useState(null);
+  const [nip, setNip] = useState("");
   const [loading, setLoading] = useState(true);
   const [btnLoading, setBtnLoading] = useState(false);
   const [JamKerjaOption, setJamKerjaOption] = useState([]);
@@ -40,45 +55,75 @@ const BerandaClient = () => {
       data.data.map((j) => ({
         label: j.nama_jam,
         value: j.id_jam,
-      }))
+      })),
     );
   };
 
+  // useeffect me
   useEffect(() => {
     let isMounted = true;
 
-    const fetchData = async () => {
+    const fetchMe = async () => {
       try {
-        // 1. ambil user login
         const meRes = await fetch("/api/auth/me");
         const meJson = await meRes.json();
 
         if (!meJson.success || !isMounted) return;
 
         setRole(meJson.data.role);
-
-        // 2. ambil data pegawai berdasarkan nip
-        const pegawaiRes = await fetch(`/api/pegawai/${meJson.data.nip}`);
-        const pegawaiJson = await pegawaiRes.json();
-
-        if (pegawaiJson.success && isMounted) {
-          setPegawai(pegawaiJson.data);
-        }
+        setNip(meJson.data.nip);
       } finally {
         if (isMounted) setLoading(false);
       }
     };
 
-    const loadDataJam = async () => {
-      await fetchDataJamKerja();
-    };
-
-    fetchData();
-    loadDataJam();
+    fetchMe();
 
     return () => {
       isMounted = false;
     };
+  }, []);
+
+  // useeffect pegawai
+  useEffect(() => {
+    if (!nip) return;
+
+    const fetchPegawai = async () => {
+      const res = await fetch(`/api/pegawai/${nip}`);
+      const data = await res.json();
+
+      if (data.success) {
+        setPegawai(data.data);
+      }
+    };
+
+    fetchPegawai();
+  }, [nip]);
+
+  // useeffect absensi pegawai
+  const fetchAbsen = async () => {
+    try {
+      const res = await fetch("/api/absensi/today");
+      const data = await res.json();
+
+      if (!data.success) {
+        setAbsen(null);
+        return;
+      }
+
+      setAbsen(data.data);
+    } catch (err) {
+      console.error("Gagal fetch absensi:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (!role) return;
+    fetchAbsen();
+  }, [role]);
+
+  useEffect(() => {
+    fetchDataJamKerja();
   }, []);
 
   const handleAbsenMasuk = async (values) => {
@@ -110,6 +155,7 @@ const BerandaClient = () => {
 
       console.log("Absen masuk sukses:", json);
       message.success("Absen masuk berhasil");
+      await fetchAbsen();
       setIsModalAbsenOpen(false);
       form.resetFields();
     } catch (err) {
@@ -125,28 +171,22 @@ const BerandaClient = () => {
     try {
       const [tglMulai, tglSelesai] = values.tgl_izin;
 
-      const payload = {
-        tgl_mulai: tglMulai.toISOString(),
-        tgl_selesai: tglSelesai.toISOString(),
-        alasan: values.alasan,
-      };
-
-      console.log("Payload izin:", payload);
+      const formData = new FormData();
+      formData.append("alasan", values.alasan);
+      formData.append("tgl_mulai", tglMulai.toISOString());
+      formData.append("tgl_selesai", tglSelesai.toISOString());
+      formData.append("file", values.upload[0].originFileObj);
 
       const res = await fetch("/api/izin", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: formData, // ⬅️ multipart
       });
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json.message || "Gagal input izin");
+      if (!res.ok) throw new Error(json.message);
 
       message.success("Izin berhasil");
-      setIsModalIzinOpen(false);
-      form.resetFields();
     } catch (err) {
-      console.error(err);
       message.error(err.message);
     } finally {
       setBtnLoading(false);
@@ -154,6 +194,8 @@ const BerandaClient = () => {
   };
 
   const handleAbsenPulang = async () => {
+    setBtnLoading(true);
+
     try {
       const res = await fetch("/api/absensi/pulang", {
         method: "PUT",
@@ -174,8 +216,11 @@ const BerandaClient = () => {
 
       console.log("Absen pulang sukses:", json);
       message.success("Berhasil absen pulang");
+      await fetchAbsenToday();
     } catch (err) {
       console.error(err.message);
+    } finally {
+      setBtnLoading(false);
     }
   };
 
@@ -190,6 +235,48 @@ const BerandaClient = () => {
     form.resetFields();
     setIsModalIzinOpen(true);
   };
+
+  const items = [
+    {
+      label: "Nama Pegawai",
+      children: pegawai?.nama_lengkap || "N/A",
+    },
+    {
+      label: "NIP",
+      children: pegawai?.nip || "N/A",
+    },
+    {
+      label: "Jenis Kelamin",
+      children: pegawai?.jenis_kelamin || "N/A",
+    },
+    {
+      label: "Jabatan",
+      children: pegawai?.jabatan || "N/A",
+    },
+    {
+      label: "Divisi",
+      children: pegawai?.divisi?.nama_divisi || "N/A",
+    },
+    {
+      label: "No Telepon",
+      children: pegawai?.no_telepon || "N/A",
+    },
+  ];
+
+  const itemsAbsen = [
+    {
+      label: "Absen Masuk",
+      children: absen?.jam_masuk
+        ? dayjs(absen?.jam_masuk).format("YYYY-MM-DD HH:mm:ss")
+        : "Belum absen masuk",
+    },
+    {
+      label: "Absen Pulang",
+      children: absen?.jam_pulang
+        ? dayjs(absen?.jam_pulang).format("YYYY-MM-DD HH:mm:ss")
+        : "Belum absen pulang",
+    },
+  ];
 
   return (
     <>
@@ -227,6 +314,21 @@ const BerandaClient = () => {
             <Input />
           </Form.Item>
           <Form.Item
+            name="upload"
+            label="Upload Bukti Dokumen"
+            valuePropName="fileList"
+            getValueFromEvent={normFile}
+            rules={[{ required: true, message: "Dokumen wajib diupload" }]}
+          >
+            <Upload
+              beforeUpload={() => false} // ⬅️ PENTING
+              maxCount={1}
+              accept=".pdf,.jpg,.jpeg,.png"
+            >
+              <Button icon={<UploadOutlined />}>Upload Dokumen</Button>
+            </Upload>
+          </Form.Item>
+          <Form.Item
             name="tgl_izin"
             label="Tanggal Izin"
             rules={[{ required: true, message: "Tanggal izin wajib diisi" }]}
@@ -237,12 +339,36 @@ const BerandaClient = () => {
       </Modal>
 
       <div className="">
+        <Skeleton loading={loading} active paragraph={false} title={false}>
+          <Descriptions
+            title="Informasi Pengguna"
+            bordered
+            column={1}
+            className="desc-user"
+            items={items}
+          />
+        </Skeleton>
+
+        {role === "pegawai" && (
+          <div className="mt-5">
+            <Skeleton loading={loading} active paragraph={false} title={false}>
+              <Descriptions
+                title="Absensi Hari Ini"
+                bordered
+                column={1}
+                className="desc-user"
+                items={itemsAbsen}
+              />
+            </Skeleton>
+          </div>
+        )}
+
         {role === "pegawai" && (
           <Flex justify="center" align="center" direction="row" gap="middle">
             <Button
               loading={btnLoading}
               type="primary"
-              style={{ marginBottom: 16 }}
+              style={{ marginTop: 16 }}
               onClick={showModalAdd}
             >
               Absen Masuk
@@ -251,8 +377,9 @@ const BerandaClient = () => {
             <Button
               loading={btnLoading}
               type="primary"
-              style={{ marginBottom: 16 }}
+              style={{ marginTop: 16 }}
               onClick={handleAbsenPulang}
+              disabled={absen?.jam_masuk ? false : true}
             >
               Absen Pulang
             </Button>
@@ -260,29 +387,13 @@ const BerandaClient = () => {
             <Button
               loading={btnLoading}
               type="primary"
-              style={{ marginBottom: 16 }}
+              style={{ marginTop: 16 }}
               onClick={showModalIzin}
             >
               Input Izin
             </Button>
           </Flex>
         )}
-
-        <Card
-          title="Informasi Pengguna"
-          variant="borderless"
-          style={{ width: 300 }}
-          loading={loading}
-        >
-          <div className="">
-            <p>Nama Pegawai : {pegawai?.nama_lengkap}</p>
-            <p>NIP : {pegawai?.nip}</p>
-            <p>Jenis Kelamin : {pegawai?.jenis_kelamin}</p>
-            <p>Jabatan : {pegawai?.jabatan}</p>
-            <p>Divisi : {pegawai?.divisi?.nama_divisi}</p>
-            <p>No Telepon : {pegawai?.no_telepon}</p>
-          </div>
-        </Card>
       </div>
     </>
   );

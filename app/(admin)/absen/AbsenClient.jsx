@@ -1,6 +1,7 @@
 "use client";
 
-import { message, Table } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
+import { Button, Input, message, Space, Table } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 
@@ -9,6 +10,66 @@ const AbsenClient = () => {
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState(null);
   const [pegawai, setPegawai] = useState(null);
+  const [searchText, setSearchText] = useState("");
+  const [searchedColumn, setSearchedColumn] = useState("");
+
+  const getColumnSearchProps = (dataIndexPath) => ({
+    filterDropdown: ({
+      setSelectedKeys,
+      selectedKeys,
+      confirm,
+      clearFilters,
+    }) => (
+      <div style={{ padding: 8 }}>
+        <Input
+          placeholder={`Cari`}
+          value={selectedKeys[0]}
+          onChange={(e) =>
+            setSelectedKeys(e.target.value ? [e.target.value] : [])
+          }
+          onPressEnter={() => {
+            confirm();
+            setSearchText(selectedKeys[0]);
+            setSearchedColumn(dataIndexPath.join("."));
+          }}
+          style={{ marginBottom: 8, display: "block" }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => {
+              confirm();
+              setSearchText(selectedKeys[0]);
+              setSearchedColumn(dataIndexPath.join("."));
+            }}
+            icon={<SearchOutlined />}
+            size="small"
+          >
+            Cari
+          </Button>
+          <Button
+            onClick={() => {
+              clearFilters();
+              setSearchText("");
+            }}
+            size="small"
+          >
+            Reset
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => (
+      <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
+    ),
+    onFilter: (value, record) => {
+      const fieldValue = dataIndexPath.reduce((obj, key) => obj?.[key], record);
+
+      return fieldValue
+        ? fieldValue.toString().toLowerCase().includes(value.toLowerCase())
+        : false;
+    },
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -75,29 +136,33 @@ const AbsenClient = () => {
     {
       title: "Nama Pegawai",
       dataIndex: ["pegawai", "nama_lengkap"],
-      key: "nama_lengkap",
+      ...getColumnSearchProps(["pegawai", "nama_lengkap"]),
     },
     {
       title: "Tanggal Absensi",
       dataIndex: "tgl_absensi",
       key: "tgl_absensi",
-      render: (val) => (val ? dayjs(val).format("YYYY-MM-DD") : "-"),
+      render: (val) => (val ? dayjs(val).format("YYYY-MM-DD") : "Belum absen"),
     },
     {
       title: "Jam Masuk",
       dataIndex: "jam_masuk",
       key: "jam_masuk",
+      render: (val) =>
+        val ? dayjs(val).format("HH:mm:ss") : "Belum absen masuk",
     },
     {
       title: "Jam Pulang",
       dataIndex: "jam_pulang",
       key: "jam_pulang",
+      render: (val) =>
+        val ? dayjs(val).format("HH:mm:ss") : "Belum absen pulang",
     },
   ];
 
   return (
     <>
-      <div className="">
+      <div className="mb-4">
         <h1>Data Absensi</h1>
       </div>
       <Table
