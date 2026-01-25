@@ -2,7 +2,6 @@
 
 import {
   Button,
-  Card,
   Flex,
   Form,
   Input,
@@ -101,7 +100,7 @@ const BerandaClient = () => {
   }, [nip]);
 
   // useeffect absensi pegawai
-  const fetchAbsen = async () => {
+  const fetchAbsenToday = async () => {
     try {
       const res = await fetch("/api/absensi/today");
       const data = await res.json();
@@ -119,7 +118,7 @@ const BerandaClient = () => {
 
   useEffect(() => {
     if (!role) return;
-    fetchAbsen();
+    fetchAbsenToday();
   }, [role]);
 
   useEffect(() => {
@@ -155,7 +154,7 @@ const BerandaClient = () => {
 
       console.log("Absen masuk sukses:", json);
       message.success("Absen masuk berhasil");
-      await fetchAbsen();
+      await fetchAbsenToday();
       setIsModalAbsenOpen(false);
       form.resetFields();
     } catch (err) {
@@ -186,6 +185,8 @@ const BerandaClient = () => {
       if (!res.ok) throw new Error(json.message);
 
       message.success("Izin berhasil");
+      setIsModalIzinOpen(false);
+      form.resetFields();
     } catch (err) {
       message.error(err.message);
     } finally {
@@ -370,6 +371,7 @@ const BerandaClient = () => {
               type="primary"
               style={{ marginTop: 16 }}
               onClick={showModalAdd}
+              disabled={absen?.jam_masuk ? true : false}
             >
               Absen Masuk
             </Button>
@@ -379,7 +381,7 @@ const BerandaClient = () => {
               type="primary"
               style={{ marginTop: 16 }}
               onClick={handleAbsenPulang}
-              disabled={absen?.jam_masuk ? false : true}
+              disabled={!absen?.jam_masuk || !!absen?.jam_pulang}
             >
               Absen Pulang
             </Button>

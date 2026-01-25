@@ -196,82 +196,82 @@ const PengaturanProfilClient = () => {
       <>
         <Flex gap={30} justify="center" align="flex-start" wrap="wrap">
           {/* KIRI */}
-          <Card
-            title="Pengaturan Profil"
-            style={{ minWidth: 700 }}
-            loading={loading}
-          >
-            <Flex vertical align="center" gap={16}>
-              <ImgCrop rotationSlider>
-                <Upload
-                  name="photo"
-                  listType="picture-circle"
-                  fileList={fileList}
-                  onPreview={handlePreview}
-                  onChange={handleChange}
-                  beforeUpload={beforeUpload}
-                  style={{ minWidth: "180px", minHeight: "180px" }}
-                  maxCount={1}
-                >
-                  {fileList.length >= 1 ? null : (
-                    <button
-                      type="button"
-                      style={{ border: 0, background: "none" }}
-                    >
-                      <PlusOutlined />
-                      <div style={{ marginTop: 8 }}>Upload</div>
-                    </button>
-                  )}
-                </Upload>
-              </ImgCrop>
+          <div style={{ flex: "1 1 700px", maxWidth: 700, width: "100%" }}>
+            <Card title="Pengaturan Profil" loading={loading}>
+              <Flex vertical align="center" gap={16}>
+                <ImgCrop rotationSlider>
+                  <Upload
+                    name="photo"
+                    listType="picture-circle"
+                    fileList={fileList}
+                    onPreview={handlePreview}
+                    onChange={handleChange}
+                    beforeUpload={beforeUpload}
+                    style={{ minWidth: "180px", minHeight: "180px" }}
+                    maxCount={1}
+                  >
+                    {fileList.length >= 1 ? null : (
+                      <button
+                        type="button"
+                        style={{ border: 0, background: "none" }}
+                      >
+                        <PlusOutlined />
+                        <div style={{ marginTop: 8 }}>Upload</div>
+                      </button>
+                    )}
+                  </Upload>
+                </ImgCrop>
 
-              {/* IMAGE PREVIEW MODAL */}
-              {previewImage && (
-                <Image
-                  styles={{
-                    root: { display: "none" },
-                    minWidth: "180px",
-                    minHeight: "180px",
-                  }}
-                  preview={{
-                    open: previewOpen,
-                    onOpenChange: (open) => setPreviewOpen(open),
-                    afterOpenChange: (open) => !open && setPreviewImage(""),
-                  }}
-                  src={previewImage}
-                  alt="avatar"
-                />
-              )}
+                {/* IMAGE PREVIEW MODAL */}
+                {previewImage && (
+                  <Image
+                    styles={{
+                      root: { display: "none" },
+                      minWidth: "180px",
+                      minHeight: "180px",
+                    }}
+                    preview={{
+                      open: previewOpen,
+                      onOpenChange: (open) => setPreviewOpen(open),
+                      afterOpenChange: (open) => !open && setPreviewImage(""),
+                    }}
+                    src={previewImage}
+                    alt="avatar"
+                  />
+                )}
 
-              <Skeleton loading={loading} active paragraph={false}>
-                <Descriptions
-                  title="Informasi Pengguna"
-                  bordered
-                  column={1}
-                  size="small"
-                  items={items}
-                  style={{ width: "100%" }}
-                />
-              </Skeleton>
-            </Flex>
-          </Card>
+                <Skeleton loading={loading} active paragraph={false}>
+                  <Descriptions
+                    title="Informasi Pengguna"
+                    bordered
+                    column={1}
+                    size="small"
+                    items={items}
+                    style={{ width: "100%" }}
+                  />
+                </Skeleton>
+              </Flex>
+            </Card>
+          </div>
 
           {/* KANAN */}
-          <Card title="Ubah Password" style={{ width: 360 }}>
-            <Form form={form} layout="vertical" onFinish={onFinish}>
-              <Form.Item
-                label="Password Baru"
-                name="password"
-                rules={[{ min: 6, message: "Password minimal 6 karakter" }]}
-              >
-                <Input.Password />
-              </Form.Item>
+          <div style={{ flex: "1 1 360px", maxWidth: 360, width: "100%" }}>
+            <Card title="Ubah Password" loading={loading}>
+              <Form form={form} layout="vertical" onFinish={onFinish}>
+                <Form.Item
+                  label="Password Baru"
+                  name="password"
+                  rules={[{ min: 6, message: "Password minimal 6 karakter" }]}
+                >
+                  <Input.Password />
+                </Form.Item>
 
-              <Button type="primary" htmlType="submit" block>
-                Submit
-              </Button>
-            </Form>
-          </Card>
+                <Button type="primary" htmlType="submit" block>
+                  Submit
+                </Button>
+              </Form>
+            </Card>
+          </div>
         </Flex>
       </>
     </>

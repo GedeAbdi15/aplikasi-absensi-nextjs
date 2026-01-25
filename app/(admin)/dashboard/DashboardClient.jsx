@@ -159,7 +159,7 @@ const DashboardClient = () => {
   }, []);
 
   useEffect(() => {
-    const fetchDatahHadirToday = async () => {
+    const fetchDataHadirToday = async () => {
       setLoading(true);
       try {
         const res = await fetch(`/api/absensi/all/today`);
@@ -174,11 +174,11 @@ const DashboardClient = () => {
       }
     };
 
-    fetchDatahHadirToday();
+    fetchDataHadirToday();
   }, []);
 
   useEffect(() => {
-    const fetchDatahTerlambatToday = async () => {
+    const fetchDataTerlambatToday = async () => {
       setLoading(true);
       try {
         const res = await fetch(`/api/absensi/today/terlambat`);
@@ -193,7 +193,7 @@ const DashboardClient = () => {
       }
     };
 
-    fetchDatahTerlambatToday();
+    fetchDataTerlambatToday();
   }, []);
 
   useEffect(() => {
@@ -203,7 +203,7 @@ const DashboardClient = () => {
         const res = await fetch(`/api/pegawai`);
 
         const json = await res.json();
-        console.log("data terlambat today :", json.data);
+        console.log("data pegawai :", json.data);
         setPegawai(json.data || []);
       } catch (err) {
         message.error("Error : " + err.message);
